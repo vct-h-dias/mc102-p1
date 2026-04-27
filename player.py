@@ -3,6 +3,7 @@
 # RA #01 (quem entregou o código):      [RA #01]
 # Nome #02:                             [NOME COMPLETO #02]
 # RA #02:                               [RA #02]
+from utils.perfect_pows import perfect_pows
 
 ## types:
 guess_type = {"NUMBER": "NUMBER", "RULE": "RULE"}
@@ -10,6 +11,8 @@ number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
 ## rules control set:
 CAN_BE_PERFECT_POW = True
+possible_perfect_pows = []
+
 CAN_BE_MOD = True
 CAN_BE_INTERVAL = True
 
@@ -28,20 +31,23 @@ def player(number_guesses, rule_guesses):
 
     Exemplo de estratégia: chutar regras aleatórias.
     """
-    global attempts, n_start, left, right
-    global CAN_BE_PERFECT_POW, CAN_BE_MOD, CAN_BE_INTERVAL
     global guess_type, number_direction_type
+    global CAN_BE_PERFECT_POW, CAN_BE_MOD, CAN_BE_INTERVAL
+    global possible_perfect_pows
+    global attempts, n_start, left, right
 
     attempts += 1
 
     print(f"Attempt #{attempts}")
     print(f"Number guesses: {number_guesses}")
     print(f"Rule guesses: {rule_guesses}")
-    print()
 
     if n_start == -1:
         if len(number_guesses) and number_guesses[-1][2]:
             n_start = number_guesses[-1][0]
+            print("n_start find: ", n_start)
+            print("with attempts: ", attempts)
+            print()
         else:
             if left == -1:
                 left = 1
@@ -61,7 +67,25 @@ def player(number_guesses, rule_guesses):
 
             return [guess_type["NUMBER"], (left + right) // 2]
 
-    print("n_start find: ", n_start)
-    print("with attempts: ", attempts)
+    if CAN_BE_PERFECT_POW:
+        print("Trying perfect pow rule...")
+
+        if not possible_perfect_pows:
+            possible_perfect_pows = perfect_pows(n_start)
+            print("Finding possible perfect pow rules...")
+            print("Possible perfect pow rules: ", possible_perfect_pows)
+
+        for k in possible_perfect_pows:
+            current_pow = possible_perfect_pows.pop()
+
+            print("Trying perfect pow rule with : ", current_pow)
+
+            if len(possible_perfect_pows) == 0:
+                CAN_BE_PERFECT_POW = False
+
+            return [guess_type["RULE"], current_pow, -1]
+
+    print("Perfect pow rule not found, trying other rules...")
+    print()
 
     return ["TODO", 0]
