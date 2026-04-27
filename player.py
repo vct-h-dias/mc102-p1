@@ -7,11 +7,12 @@ from utils.perfect_pows import perfect_pows
 
 ## types:
 guess_type = {"NUMBER": "NUMBER", "RULE": "RULE"}
+rule_type = {"MOD": "mod", "POW": "pot", "INTERVAL": "int"}
 number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
 ## rules control set:
 CAN_BE_PERFECT_POW = True
-possible_perfect_pows = []
+possible_perfect_pows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 CAN_BE_MOD = True
 CAN_BE_INTERVAL = True
@@ -67,13 +68,15 @@ def player(number_guesses, rule_guesses):
 
             return [guess_type["NUMBER"], (left + right) // 2]
 
+    if n_start != 1:
+        # if the rule is perfect pow, n_start should be 1, because 1 is
+        # the only number that is a perfect pow of all k's and the
+        # first pointer of binary search is 1, so if n_start is not 1,
+        # we can rule out perfect pow rule
+        CAN_BE_PERFECT_POW = False
+
     if CAN_BE_PERFECT_POW:
         print("Trying perfect pow rule...")
-
-        if not possible_perfect_pows:
-            possible_perfect_pows = perfect_pows(n_start)
-            print("Finding possible perfect pow rules...")
-            print("Possible perfect pow rules: ", possible_perfect_pows)
 
         for k in possible_perfect_pows:
             current_pow = possible_perfect_pows.pop()
@@ -83,7 +86,7 @@ def player(number_guesses, rule_guesses):
             if len(possible_perfect_pows) == 0:
                 CAN_BE_PERFECT_POW = False
 
-            return [guess_type["RULE"], current_pow, -1]
+            return [guess_type["RULE"], [rule_type["POW"], current_pow, -1]]
 
     print("Perfect pow rule not found, trying other rules...")
     print()
