@@ -6,7 +6,13 @@ e calcula métricas de desempenho do `player.py`.
 
 from importlib import reload
 import player
-from game import choose_rule, generate_numbers, direction, guess_rule, verify_player_guess
+from game import (
+    choose_rule,
+    generate_numbers,
+    direction,
+    guess_rule,
+    verify_player_guess,
+)
 
 try:
     from tqdm import tqdm
@@ -52,6 +58,8 @@ def play_one_game(max_attempts):
                 "number_guesses": len(number_guesses),
             }
 
+    print("Failed")
+    print(rule_info)
     return {
         "win": False,
         "attempts": max_attempts,
@@ -64,7 +72,9 @@ def results_from_list(values):
     ordered = sorted(values)
     n = len(ordered)
     mean = sum(ordered) / n
-    median = ordered[n // 2] if n % 2 == 1 else (ordered[n // 2 - 1] + ordered[n // 2]) / 2
+    median = (
+        ordered[n // 2] if n % 2 == 1 else (ordered[n // 2 - 1] + ordered[n // 2]) / 2
+    )
     std = (sum((x - mean) ** 2 for x in ordered) / n) ** 0.5
     return mean, median, std, ordered[0], ordered[-1]
 
@@ -72,7 +82,7 @@ def results_from_list(values):
 def main():
     """Executa o torneio e imprime métricas agregadas."""
     max_games = 1000
-    max_attempts = 1000 # Inclui chutes de números e de regras
+    max_attempts = 1000  # Inclui chutes de números e de regras
 
     attempts = []
     number_guess_counts = []
@@ -114,4 +124,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()  
+    main()
