@@ -9,15 +9,15 @@ Partidas sem acerto: 0
 Taxa de acerto: 100.00%
 
 Tentativas por partida:
-Média: 4.771
-Mediana: 5.000
-Desvio padrão: 1.311
-Mínimo: 3
-Máximo: 7
+Média: 6.067
+Mediana: 6.000
+Desvio padrão: 2.636
+Mínimo: 2
+Máximo: 10
 
 Chutes de número por partida:
-Média: 2.000
-Mediana: 2.000
+Média: 1.000
+Mediana: 1.000
 Desvio padrão: 0.000
-Mínimo: 2
-Máximo: 2
+Mínimo: 1
+Máximo: 1
