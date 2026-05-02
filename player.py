@@ -32,6 +32,13 @@ interval_b = -1
 
 CAN_BE_MOD = True
 
+## jump and hone MOD variables:
+jump_bs_left = -1
+jump_bs_right = -1
+found_v = False
+valid_v = -1
+possible_ks = []
+
 ## first n found:
 n_start = -1
 left = -1
@@ -58,6 +65,7 @@ def player(number_guesses, rule_guesses):
     global CAN_BE_MOD
     global attempts, n_start, left, right
     global last_processed_number_guesses
+    global jump_bs_left, jump_bs_right, found_v, valid_v, possible_ks
 
     attempts += 1
 
@@ -66,7 +74,7 @@ def player(number_guesses, rule_guesses):
     print(f"Rule guesses: {rule_guesses}")
 
     # ==========================================
-    # BUSCA DO N_START
+    # SEARCH FROM n_start
     # ==========================================
     if n_start == -1:
         if len(number_guesses) and number_guesses[-1][2]:
@@ -93,7 +101,7 @@ def player(number_guesses, rule_guesses):
             return [guess_type["NUMBER"], (left + right) // 2]
 
     # ==========================================
-    # REGRA: PERFECT POW
+    # RULE: PERFECT POW
     # ==========================================
     if n_start != 1:
         # if the rule is POW, n_start should be 1, because 1 is
@@ -182,6 +190,17 @@ def player(number_guesses, rule_guesses):
             else:
                 right_bs_right = last_guess - 1
 
+        # Jump Binary Search Updates for V (MOD rule)
+        elif CAN_BE_MOD and not found_v and jump_bs_left != -1:
+            if is_valid:
+                valid_v = last_guess
+                found_v = True
+            else:
+                if direction == number_direction_type["LESS"]:
+                    jump_bs_right = last_guess - 1
+                else:
+                    jump_bs_left = last_guess + 1
+
         # Mark this guess as processed
         last_processed_number_guesses = len(number_guesses)
 
@@ -256,12 +275,175 @@ def player(number_guesses, rule_guesses):
             ]
 
     # ==========================================
-    # REGRA: MOD (Fallback)
+    # RULE: MOD
     # ==========================================
     if CAN_BE_MOD:
-        print("The RULE is MOD")
-        # You could add your MOD finding logic here in the future
-        # For now, just firing a basic MOD guess:
-        return [guess_type["RULE"], [rule_type["MOD"], 2, 0]]
+        print("The RULE is MOD (Doing Jump & Hone...)")
+
+        # 1. Find a second valid number (V) quickly
+        if not found_v:
+            if jump_bs_left == -1:
+                # Jump forward to a random safe target to avoid tiny gaps
+                target = n_start + 3141
+                if target > 100_000:
+                    target = n_start - 3141
+
+                # We only need to search a window of 100 numbers!
+                jump_bs_left = max(1, target - 50)
+                jump_bs_right = min(100_000, target + 50)
+
+            if jump_bs_left >= jump_bs_right:
+                valid_v = jump_bs_left
+                found_v = True
+            else:
+                mid = (jump_bs_left + jump_bs_right) // 2
+                return [guess_type["NUMBER"], mid]
+
+        # 2. Extract Divisors and Filter using History
+        # 2. Extract Divisors and Filter using History
+        if found_v:
+            if len(possible_ks) == 0:
+                diff = abs(valid_v - n_start)
+
+                # Get all divisors <= 100
+                candidates = [k for k in range(2, 101) if diff % k == 0]
+
+                # Filter candidates using your entire game history
+                for k in candidates:
+                    r = n_start % k
+                    is_possible = True
+
+                    for guess, direction, is_val in number_guesses:
+                        # Check 1: Does the validity match?
+                        if (guess % k == r) != is_val:
+                            is_possible = False
+                            break
+
+                        # Check 2: Calculate EXACT closest valid number strictly within bounds [1, 100000]
+                        if not is_val:
+                            m_base = (guess - r) // k
+                            valid_neighbors = []
+
+                            # Generate local numbers in the sequence and filter out-of-bounds
+                            for delta in [-2, -1, 0, 1, 2]:
+                                v = k * (m_base + delta) + r
+                                if 1 <= v <= 100_000:
+                                    valid_neighbors.append(v)
+
+                            if not valid_neighbors:
+                                continue
+
+                            min_dist = float("inf")
+                            best_v = None
+
+                            for v in valid_neighbors:
+                                dist = abs(v - guess)
+                                if dist < min_dist:
+                                    min_dist = dist
+                                    best_v = v
+                                elif dist == min_dist:
+                                    # Tie-breaker: Project spec says middle point returns 'menor' (which means we select the smaller number)
+                                    best_v = min(best_v, v)
+
+                            if best_v < guess:
+                                expected_dir = number_direction_type["LESS"]
+                            elif best_v > guess:
+                                expected_dir = number_direction_type["GREATER"]
+                            else:
+                                continue  # Should not hit this if not is_val
+
+                            if expected_dir != direction:
+                                is_possible = False
+                                break
+
+                    if is_possible:
+                        possible_ks.append(k)
+
+            # 3. Guess the mathematically proven rule!
+            if len(possible_ks) == 1:
+                # If only one candidate survives the filter, we are mathematically certain!
+                guess_k = possible_ks[0]
+                print(f"Mathematical certainty! Guessing MOD {guess_k}")
+                return [
+                    guess_type["RULE"],
+                    [rule_type["MOD"], guess_k, n_start % guess_k],
+                ]
+
+            elif len(possible_ks) > 1:
+                # If multiple candidates survive, we MUST guess a NUMBER to break the tie!
+                mid_point = (n_start + valid_v) // 2
+
+                guesses_set = set(g[0] for g in number_guesses)
+                while mid_point in guesses_set:
+                    mid_point += 1
+
+                print(
+                    f"Multiple candidates {possible_ks}. Guessing number {mid_point} to break tie."
+                )
+                possible_ks = []  # Clear so it recalculates with new data
+                return [guess_type["NUMBER"], mid_point]
+
+            else:
+                # Ultimate Fallback: The filter eliminated EVERYTHING.
+                fallback_guess = valid_v + 1
+                guesses_set = set(g[0] for g in number_guesses)
+                while fallback_guess in guesses_set or fallback_guess > 100_000:
+                    fallback_guess += 1
+                    if fallback_guess > 100_000:
+                        fallback_guess = 1
+
+                print(
+                    f"All candidates eliminated! Forcing new data with number {fallback_guess}"
+                )
+                found_v = False  # Force it to find a new V next time
+                jump_bs_left = -1
+                possible_ks = []  # Clear the list
+                return [guess_type["NUMBER"], fallback_guess]
+
+            # 3. Guess the mathematically proven rule!
+            if len(possible_ks) == 1:
+                # If only one candidate survives the filter, we are mathematically certain!
+                guess_k = possible_ks[0]
+                print(f"Mathematical certainty! Guessing MOD {guess_k}")
+                # We do NOT pop it. If we are wrong (impossible), we want to stay in the loop to debug.
+                return [
+                    guess_type["RULE"],
+                    [rule_type["MOD"], guess_k, n_start % guess_k],
+                ]
+
+            elif len(possible_ks) > 1:
+                # If multiple candidates survive, we MUST guess a NUMBER to break the tie!
+                # Do NOT guess a rule, or we will infinite loop.
+                # Let's guess a number exactly in the middle of our two valid hits.
+                mid_point = (n_start + valid_v) // 2
+
+                # Ensure we don't guess a number we already guessed!
+                guesses_set = set(g[0] for g in number_guesses)
+                while mid_point in guesses_set:
+                    mid_point += 1
+
+                print(
+                    f"Multiple candidates {possible_ks}. Guessing number {mid_point} to break tie."
+                )
+
+                # Clear the possible_ks list so it recalculates with the new number data next turn
+                possible_ks = []
+                return [guess_type["NUMBER"], mid_point]
+
+            else:
+                # Ultimate Fallback: The filter eliminated EVERYTHING.
+                # This usually means valid_v wasn't actually part of the same MOD sequence
+                # (edge cases). Let's guess a random number to get more data and prevent the loop.
+                fallback_guess = valid_v + 1
+                guesses_set = set(g[0] for g in number_guesses)
+                while fallback_guess in guesses_set:
+                    fallback_guess += 1
+
+                print(
+                    f"All candidates eliminated! Forcing new data with number {fallback_guess}"
+                )
+                found_v = False  # Force it to find a new V next time
+                jump_bs_left = -1
+                return [guess_type["NUMBER"], fallback_guess]
 
     return ["TODO", 0]
