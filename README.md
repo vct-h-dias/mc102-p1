@@ -1,5 +1,26 @@
 ## mc102-p1
 
+### GENERAL `tournament.py` results:
+Total de partidas simuladas: 1000
+Máximo de tentativas por jogo: 1000
+Partidas vencidas: 1000
+Partidas sem acerto: 0
+Taxa de acerto: 100.00%
+
+Tentativas por partida:
+Média: 17.909
+Mediana: 22.000
+Desvio padrão: 11.022
+Mínimo: 3
+Máximo: 53
+
+Chutes de número por partida:
+Média: 15.949
+Mediana: 20.000
+Desvio padrão: 11.508
+Mínimo: 2
+Máximo: 51
+
 ### POW `tournament.py` results:
 
 Total de partidas simuladas: 1000

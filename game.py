@@ -85,7 +85,6 @@ def choose_rule():
     Retorna função que representa a regra, uma descrição e um dicionário com nome da regra e seus números.
     """
     rule_type = random.choice(["mod", "pot", "int"])
-    rule_type = "mod"
     if rule_type == "mod":
         k = random.randint(2, 100)
         r = random.randint(0, k - 1)
@@ -328,9 +327,6 @@ def game():
     small = pygame.font.SysFont("consolas", 18)
 
     rule_desc, rule_info, numbers = new_match()
-    print("Regra secreta:", rule_desc)
-    print("Informações da regra:", rule_info)
-    print("Números gerados:", numbers)
     game_over = False
     paused = False
     input_text = ""
