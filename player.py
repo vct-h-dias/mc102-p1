@@ -12,7 +12,10 @@ number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
 ## rules control set:
 CAN_BE_PERFECT_POW = True
-possible_perfect_pows = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+can_be_k_of_4096 = False
+k_of_4096 = [1, 2, 3, 4, 6]
+cannot_be_k_of_4096 = False
+not_k_of_4096 = [1, 5, 7, 8, 9, 10]
 
 CAN_BE_MOD = True
 CAN_BE_INTERVAL = True
@@ -34,7 +37,8 @@ def player(number_guesses, rule_guesses):
     """
     global guess_type, number_direction_type
     global CAN_BE_PERFECT_POW, CAN_BE_MOD, CAN_BE_INTERVAL
-    global possible_perfect_pows
+    global can_be_k_of_4096, cannot_be_k_of_4096
+    global k_of_4096, not_k_of_4096
     global attempts, n_start, left, right
 
     attempts += 1
@@ -69,21 +73,38 @@ def player(number_guesses, rule_guesses):
             return [guess_type["NUMBER"], (left + right) // 2]
 
     if n_start != 1:
-        # if the rule is perfect pow, n_start should be 1, because 1 is
+        # if the rule is POW, n_start should be 1, because 1 is
         # the only number that is a perfect pow of all k's and the
         # first pointer of binary search is 1, so if n_start is not 1,
-        # we can rule out perfect pow rule
+        # we can rule out POW rule
         CAN_BE_PERFECT_POW = False
 
     if CAN_BE_PERFECT_POW:
-        print("Trying perfect pow rule...")
+        print("Trying POW rule...")
 
-        for k in possible_perfect_pows:
-            current_pow = possible_perfect_pows.pop()
+        if number_guesses[-1][0] == 4096 and number_guesses[-1][2]:
+            can_be_k_of_4096 = True
+        elif number_guesses[-1][0] == 4096 and not number_guesses[-1][2]:
+            cannot_be_k_of_4096 = True
+        else:
+            print("Trying 4096 for POW rule...")
+            return [guess_type["NUMBER"], 4096]
+
+        if can_be_k_of_4096:
+            current_pow = k_of_4096.pop()
 
             print("Trying perfect pow rule with : ", current_pow)
 
-            if len(possible_perfect_pows) == 0:
+            if len(k_of_4096) == 0:
+                CAN_BE_PERFECT_POW = False
+
+            return [guess_type["RULE"], [rule_type["POW"], current_pow, -1]]
+        elif cannot_be_k_of_4096:
+            current_pow = not_k_of_4096.pop()
+
+            print("Trying perfect pow rule with : ", current_pow)
+
+            if len(not_k_of_4096) == 0:
                 CAN_BE_PERFECT_POW = False
 
             return [guess_type["RULE"], [rule_type["POW"], current_pow, -1]]
