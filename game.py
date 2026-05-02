@@ -1,20 +1,19 @@
 """Arquivo responsável pela interface gráfica e inicialização do jogo.
 
-Este script é a implementação principal da interface gráfica do jogo, utilizando a biblioteca Pygame. 
-O jogo é um adivinhador de regra matemática, no qual o jogador deve adivinhar uma regra que um conjunto de números de 1 a 100.000 satisfaz. 
+Este script é a implementação principal da interface gráfica do jogo, utilizando a biblioteca Pygame.
+O jogo é um adivinhador de regra matemática, no qual o jogador deve adivinhar uma regra que um conjunto de números de 1 a 100.000 satisfaz.
 A interface permite ao jogador interagir com o jogo por meio de entradas de teclado.
 O feedback das tentativas é exibido de forma sequencial.
 
-A estrutura do código está dividida entre a inicialização do jogo, o controle dos eventos de entrada do jogador, 
-a lógica de verificação dos chutes tentados, a atualização da interface e 
+A estrutura do código está dividida entre a inicialização do jogo, o controle dos eventos de entrada do jogador,
+a lógica de verificação dos chutes tentados, a atualização da interface e
 a automatização de jogadas de um jogador automático.
 
-O código também inclui a definição de algumas constantes, como a largura e altura da janela, 
+O código também inclui a definição de algumas constantes, como a largura e altura da janela,
 o tamanho da grade de jogo, a fonte a ser utilizada e a regra secreta a ser adivinhada.
 
-Além disso, o código permite que o jogo seja pausado ao pressionar a tecla espaço quando o modo automático está ativado. 
+Além disso, o código permite que o jogo seja pausado ao pressionar a tecla espaço quando o modo automático está ativado.
 """
-
 
 import argparse
 import importlib
@@ -82,21 +81,33 @@ rule_guesses = []
 
 def choose_rule():
     """Escolhe e retorna uma das regras disponíveis aleatoriamente.
-    
+
     Retorna função que representa a regra, uma descrição e um dicionário com nome da regra e seus números.
     """
-    rule_type = random.choice(["mod", "pot", "int"])
+    rule_type = random.choice(["mod", "int"])
     if rule_type == "mod":
         k = random.randint(2, 100)
         r = random.randint(0, k - 1)
-        return lambda n: n % k == r, f"n % {k} == {r}", {"type": rule_type, "k": k, "r": r}
+        return (
+            lambda n: n % k == r,
+            f"n % {k} == {r}",
+            {"type": rule_type, "k": k, "r": r},
+        )
     elif rule_type == "pot":
         p = random.randint(2, 10)
-        return lambda n: round(n ** (1 / p)) ** p == n, f"n é potência perfeita de ordem {p}", {"type": rule_type, "p": p}
+        return (
+            lambda n: round(n ** (1 / p)) ** p == n,
+            f"n é potência perfeita de ordem {p}",
+            {"type": rule_type, "p": p},
+        )
     else:
         a = random.randint(1, 100_000)
         b = random.randint(a, min(100_000, a + 100))
-        return lambda n: a <= n <= b, f"n está entre {a} e {b}, inclusive", {"type": rule_type, "a": a, "b": b}
+        return (
+            lambda n: a <= n <= b,
+            f"n está entre {a} e {b}, inclusive",
+            {"type": rule_type, "a": a, "b": b},
+        )
 
 
 def generate_numbers(rule):
@@ -142,7 +153,9 @@ def guess_rule(guess, rule_info):
 def verify_player_guess(player_guess):
     """Verifica o retorno da função player, gerando erros caso não esteja no formato esperado."""
     if not isinstance(player_guess, list) or len(player_guess) != 2:
-        raise ValueError("Retorno da função player não é lista e/ou não é do tipo [ação, chute]")
+        raise ValueError(
+            "Retorno da função player não é lista e/ou não é do tipo [ação, chute]"
+        )
 
     action = str(player_guess[0]).upper()
     if action == "NUMBER":
@@ -158,20 +171,28 @@ def verify_player_guess(player_guess):
         tipo = str(guess[0]).lower()
         if tipo == "mod":
             if len(guess) != 3:
-                raise ValueError(f"mod admite 2 parâmetros (k e r), foram dados {len(guess) - 1}: {guess[1:]}.")
+                raise ValueError(
+                    f"mod admite 2 parâmetros (k e r), foram dados {len(guess) - 1}: {guess[1:]}."
+                )
             return ["RULE", ["mod", int(guess[1]), int(guess[2])]]
         elif tipo == "pot":
             if len(guess) != 3:
-                raise ValueError(f"pot admite 2 parâmetros (o primeiro sendo p), foram dados {len(guess) - 1}: {guess[1:]}.")
+                raise ValueError(
+                    f"pot admite 2 parâmetros (o primeiro sendo p), foram dados {len(guess) - 1}: {guess[1:]}."
+                )
             return ["RULE", ["pot", int(guess[1]), 0]]
         elif tipo == "int":
             if len(guess) != 3:
-                raise ValueError(f"int admite 2 parâmetros (a e b), foram dados {len(guess) - 1}: {guess[1:]}.")
+                raise ValueError(
+                    f"int admite 2 parâmetros (a e b), foram dados {len(guess) - 1}: {guess[1:]}."
+                )
             return ["RULE", ["int", int(guess[1]), int(guess[2])]]
         else:
-            raise ValueError(f"Tipo de regra \"{tipo}\" inválido, deve ser \"mod\", \"pot\" ou \"int\".")
+            raise ValueError(
+                f'Tipo de regra "{tipo}" inválido, deve ser "mod", "pot" ou "int".'
+            )
     else:
-        raise ValueError(f"Ação deve ser NUMBER ou RULE, mas foi dado \"{action}\".")
+        raise ValueError(f'Ação deve ser NUMBER ou RULE, mas foi dado "{action}".')
 
 
 def parse_manual_input(text):
@@ -204,9 +225,13 @@ def parse_manual_input(text):
     elif tokens[0] == "mod" and len(tokens) == 3:
         k, r = tokens[1], tokens[2]
         if not k.isdigit() or not r.isdigit():
-            raise ValueError(f"Parâmetros k e r devem ser números inteiros, foram dados '{k}' e '{r}'.")
+            raise ValueError(
+                f"Parâmetros k e r devem ser números inteiros, foram dados '{k}' e '{r}'."
+            )
         return ["RULE", ["mod", int(k), int(r)]]
-    elif tokens[0] == "pot" and 2 <= len(tokens) <= 3: # Permitir terceiro parâmetro para alinhar com função player, mas ignorá-lo
+    elif (
+        tokens[0] == "pot" and 2 <= len(tokens) <= 3
+    ):  # Permitir terceiro parâmetro para alinhar com função player, mas ignorá-lo
         p = tokens[1]
         if not p.isdigit():
             raise ValueError(f"Parâmetro p deve ser um número inteiro, foi dado '{p}'.")
@@ -214,7 +239,9 @@ def parse_manual_input(text):
     elif tokens[0] == "int" and len(tokens) == 3:
         a, b = tokens[1], tokens[2]
         if not a.isdigit() or not b.isdigit():
-            raise ValueError(f"Parâmetros a e b devem ser números inteiros, foram dados '{a}' e '{b}'.")
+            raise ValueError(
+                f"Parâmetros a e b devem ser números inteiros, foram dados '{a}' e '{b}'."
+            )
         return ["RULE", ["int", int(a), int(b)]]
 
     else:
@@ -232,7 +259,10 @@ def apply_guess(player_guess, numbers, rule_info):
         number_guesses.append([guess, "igual" if hit else d, hit])
         if hit:
             return False, f"Número {guess} satisfaz a regra."
-        return False, f"Número {guess} não satisfaz a regra, mas um número mais próximo que satisfaz a regra é {d}."
+        return (
+            False,
+            f"Número {guess} não satisfaz a regra, mas um número mais próximo que satisfaz a regra é {d}.",
+        )
 
     if action == "RULE":
         rule_type, p1, p2 = player_guess[1]
@@ -247,11 +277,20 @@ def apply_guess(player_guess, numbers, rule_info):
 
         if not rule_is_possible(guess):
             if guess["type"] == "mod":
-                return False, f"Regra impossível: no 'mod', k ({guess['k']}) deveria estar em [2, 100], e r ({guess['r']}) deveria estar em [0, {guess['k'] - 1}]."
+                return (
+                    False,
+                    f"Regra impossível: no 'mod', k ({guess['k']}) deveria estar em [2, 100], e r ({guess['r']}) deveria estar em [0, {guess['k'] - 1}].",
+                )
             elif guess["type"] == "pot":
-                return False, f"Regra impossível: no 'pot', p ({guess['p']}) deveria estar em [2, 10]."
+                return (
+                    False,
+                    f"Regra impossível: no 'pot', p ({guess['p']}) deveria estar em [2, 10].",
+                )
             elif guess["type"] == "int":
-                return False, f"Regra impossível: no 'int', a ({guess['a']}) e b ({guess['b']}) deveriam satisfazer 1 <= a <= b <= 100.000."
+                return (
+                    False,
+                    f"Regra impossível: no 'int', a ({guess['a']}) e b ({guess['b']}) deveriam satisfazer 1 <= a <= b <= 100.000.",
+                )
         rule_guesses.append([rule_type, p1, p2])
         if guess_rule(guess, rule_info):
             return True, f"Parabéns, você acertou a regra secreta!"
@@ -278,7 +317,7 @@ def write_text(surface, text, font, color, x, y):
 
 def game():
     """Função central do jogo."""
-    
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("Adivinhador de Regras")
@@ -308,12 +347,14 @@ def game():
                 if event.key == pygame.K_ESCAPE:
                     running = False
                     break
-                
+
                 if event.key == pygame.K_SPACE and args.auto:
                     paused = not paused
                     if paused:
                         pygame.time.set_timer(AUTO_EVENT, 0)
-                        messages.append("Jogo pausado. Pressione Espaço para continuar.")
+                        messages.append(
+                            "Jogo pausado. Pressione Espaço para continuar."
+                        )
                     else:
                         pygame.time.set_timer(AUTO_EVENT, args.auto)
                         messages.append("Jogo continuado.")
@@ -351,7 +392,9 @@ def game():
 
             if event.type == AUTO_EVENT and args.auto is not None and not game_over:
                 try:
-                    auto_guess = verify_player_guess(player_module.player(number_guesses, rule_guesses))
+                    auto_guess = verify_player_guess(
+                        player_module.player(number_guesses, rule_guesses)
+                    )
                     game_over, msg = apply_guess(auto_guess, numbers, rule_info)
                 except Exception as exc:
                     msg = f"Erro no player automático: {exc}"
@@ -360,25 +403,55 @@ def game():
 
         screen.fill(BG)
 
-        pygame.draw.rect(screen, PANEL, (20, 20, WIDTH - 40, HEIGHT - 40), border_radius=8)
-        pygame.draw.rect(screen, BORDER, (20, 20, WIDTH - 40, HEIGHT - 40), 2, border_radius=8)
+        pygame.draw.rect(
+            screen, PANEL, (20, 20, WIDTH - 40, HEIGHT - 40), border_radius=8
+        )
+        pygame.draw.rect(
+            screen, BORDER, (20, 20, WIDTH - 40, HEIGHT - 40), 2, border_radius=8
+        )
 
         write_text(screen, "Adivinhador de Regras", font, TEXT, 40, 36)
-        write_text(screen, "Comandos: n | num n | mod k r | pot p | int a b", small, MUTED, 40, 70)
-        write_text(screen, "Teclas: Enter=chutar, R=reiniciar, Esc=fechar, Espaço=pausar (apenas em modo --auto)", small, MUTED, 40, 94)
+        write_text(
+            screen,
+            "Comandos: n | num n | mod k r | pot p | int a b",
+            small,
+            MUTED,
+            40,
+            70,
+        )
+        write_text(
+            screen,
+            "Teclas: Enter=chutar, R=reiniciar, Esc=fechar, Espaço=pausar (apenas em modo --auto)",
+            small,
+            MUTED,
+            40,
+            94,
+        )
 
-        status = "FINALIZADO" if game_over else ("PAUSADO" if paused else "EM ANDAMENTO")
+        status = (
+            "FINALIZADO" if game_over else ("PAUSADO" if paused else "EM ANDAMENTO")
+        )
         status_color = OK if game_over else (PAUSED if paused else ACCENT)
         write_text(screen, f"Status: {status}", font, status_color, 40, 128)
 
         write_text(screen, "Entrada:", font, TEXT, 40, 168)
-        pygame.draw.rect(screen, (12, 12, 15), (140, 164, WIDTH - 190, 40), border_radius=6)
-        pygame.draw.rect(screen, ACCENT, (140, 164, WIDTH - 190, 40), 2, border_radius=6)
-        shown_input = "(desabilitada no modo --auto)" if args.auto is not None else input_text
+        pygame.draw.rect(
+            screen, (12, 12, 15), (140, 164, WIDTH - 190, 40), border_radius=6
+        )
+        pygame.draw.rect(
+            screen, ACCENT, (140, 164, WIDTH - 190, 40), 2, border_radius=6
+        )
+        shown_input = (
+            "(desabilitada no modo --auto)" if args.auto is not None else input_text
+        )
         write_text(screen, shown_input, small, TEXT, 150, 174)
 
-        write_text(screen, f"Chutes de número: {len(number_guesses)}", small, TEXT, 40, 224)
-        write_text(screen, f"Chutes de regra: {len(rule_guesses)}", small, TEXT, 500, 224)
+        write_text(
+            screen, f"Chutes de número: {len(number_guesses)}", small, TEXT, 40, 224
+        )
+        write_text(
+            screen, f"Chutes de regra: {len(rule_guesses)}", small, TEXT, 500, 224
+        )
 
         y = 256
         write_text(screen, "Últimos chutes de número:", small, MUTED, 40, y)
@@ -404,7 +477,15 @@ def game():
         write_text(screen, "Mensagens:", small, MUTED, 40, y)
         y += 26
         for msg in messages[-7:]:
-            color = OK if "Parabéns" in msg else (ERR if "inválido" in msg.lower() or "erro" in msg.lower() else (PAUSED if "pausado" in msg.lower() else TEXT))
+            color = (
+                OK
+                if "Parabéns" in msg
+                else (
+                    ERR
+                    if "inválido" in msg.lower() or "erro" in msg.lower()
+                    else (PAUSED if "pausado" in msg.lower() else TEXT)
+                )
+            )
             write_text(screen, msg[:100], small, color, 40, y)
             y += 22
 
