@@ -84,3 +84,24 @@ Mediana: 21.000
 Desvio padrão: 9.628
 Mínimo: 5
 Máximo: 55
+
+### Running 100_000 games on `tournament.py` results:
+Total de partidas simuladas: 100000
+Máximo de tentativas por jogo: 1000
+Partidas vencidas: 99989
+Partidas sem acerto: 11
+Taxa de acerto: 99.99%
+
+Tentativas por partida:
+Média: 18.293
+Mediana: 22.000
+Desvio padrão: 14.970
+Mínimo: 3
+Máximo: 1000
+
+Chutes de número por partida:
+Média: 16.289
+Mediana: 21.000
+Desvio padrão: 15.362
+Mínimo: 2
+Máximo: 999
