@@ -8,21 +8,20 @@ Partidas sem acerto: 0
 Taxa de acerto: 100.00%
 
 Tentativas por partida:
-Média: 17.909
-Mediana: 22.000
-Desvio padrão: 11.022
+Média: 15.761
+Mediana: 16.500
+Desvio padrão: 9.120
 Mínimo: 3
-Máximo: 53
+Máximo: 44
 
 Chutes de número por partida:
-Média: 15.949
-Mediana: 20.000
-Desvio padrão: 11.508
+Média: 14.098
+Mediana: 15.500
+Desvio padrão: 9.820
 Mínimo: 2
-Máximo: 51
+Máximo: 43
 
 ### POW `tournament.py` results:
-
 Total de partidas simuladas: 1000
 Máximo de tentativas por jogo: 1000
 Partidas vencidas: 1000
@@ -30,9 +29,9 @@ Partidas sem acerto: 0
 Taxa de acerto: 100.00%
 
 Tentativas por partida:
-Média: 4.764
+Média: 4.782
 Mediana: 5.000
-Desvio padrão: 1.312
+Desvio padrão: 1.296
 Mínimo: 3
 Máximo: 7
 
@@ -51,57 +50,36 @@ Partidas sem acerto: 0
 Taxa de acerto: 100.00%
 
 Tentativas por partida:
-Média: 25.320
+Média: 25.388
 Mediana: 26.000
-Desvio padrão: 1.850
-Mínimo: 10
+Desvio padrão: 1.744
+Mínimo: 17
 Máximo: 28
 
 Chutes de número por partida:
-Média: 24.320
+Média: 24.388
 Mediana: 25.000
-Desvio padrão: 1.850
-Mínimo: 9
+Desvio padrão: 1.744
+Mínimo: 16
 Máximo: 27
 
 ### MOD `tournament.py` results:
-Total de partidas simuladas: 1000
+Total de partidas simuladas: 100000
 Máximo de tentativas por jogo: 1000
-Partidas vencidas: 1000
+Partidas vencidas: 100000
 Partidas sem acerto: 0
 Taxa de acerto: 100.00%
 
 Tentativas por partida:
-Média: 24.226
-Mediana: 23.000
-Desvio padrão: 9.394
-Mínimo: 8
-Máximo: 57
-
-Chutes de número por partida:
-Média: 21.907
-Mediana: 21.000
-Desvio padrão: 9.628
-Mínimo: 5
+Média: 15.671
+Mediana: 16.000
+Desvio padrão: 8.979
+Mínimo: 3
 Máximo: 55
 
-### Running 100_000 games on `tournament.py` results:
-Total de partidas simuladas: 100000
-Máximo de tentativas por jogo: 1000
-Partidas vencidas: 99989
-Partidas sem acerto: 11
-Taxa de acerto: 99.99%
-
-Tentativas por partida:
-Média: 18.293
-Mediana: 22.000
-Desvio padrão: 14.970
-Mínimo: 3
-Máximo: 1000
-
 Chutes de número por partida:
-Média: 16.289
-Mediana: 21.000
-Desvio padrão: 15.362
+Média: 14.000
+Mediana: 15.000
+Desvio padrão: 9.697
 Mínimo: 2
-Máximo: 999
+Máximo: 54
