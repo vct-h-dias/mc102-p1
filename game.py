@@ -85,6 +85,9 @@ def choose_rule():
     Retorna função que representa a regra, uma descrição e um dicionário com nome da regra e seus números.
     """
     rule_type = random.choice(["mod", "pot", "int"])
+    # rule_type = "pot"
+    # rule_type = "int"
+    # rule_type = "mod"
     if rule_type == "mod":
         k = random.randint(2, 100)
         r = random.randint(0, k - 1)

@@ -1,9 +1,3 @@
-"""Torneio para avaliar estratégias de player no jogo de regras numéricas.
-
-Este script simula várias partidas do jogo de adivinhar regras
-e calcula métricas de desempenho do `player.py`.
-"""
-
 from importlib import reload
 import player
 from game import (
@@ -14,6 +8,8 @@ from game import (
     verify_player_guess,
 )
 
+import datetime
+
 try:
     from tqdm import tqdm
 except ImportError:
@@ -22,8 +18,8 @@ except ImportError:
 
 
 def play_one_game(max_attempts):
-    """Simula uma partida e retorna estatísticas da partida."""
     rule, _, rule_info = choose_rule()
+    rule_type_original = rule_info["type"]
     numbers = generate_numbers(rule)
 
     reload(player)
@@ -52,23 +48,14 @@ def play_one_game(max_attempts):
 
         rule_guesses.append([rule_type, p1, p2])
         if guess_rule(guessed_rule, rule_info):
-            return {
-                "win": True,
-                "attempts": attempts,
-                "number_guesses": len(number_guesses),
-            }
+            return {"win": True, "attempts": attempts, "type": rule_type_original}
 
-    print("Failed")
-    print(rule_info)
-    return {
-        "win": False,
-        "attempts": max_attempts,
-        "number_guesses": len(number_guesses),
-    }
+    return {"win": False, "attempts": max_attempts, "type": rule_type_original}
 
 
 def results_from_list(values):
-    """Retorna média, mediana, desvio padrão, mínimo e máximo de uma lista."""
+    if not values:
+        return 0, 0, 0, 0, 0
     ordered = sorted(values)
     n = len(ordered)
     mean = sum(ordered) / n
@@ -79,48 +66,108 @@ def results_from_list(values):
     return mean, median, std, ordered[0], ordered[-1]
 
 
-def main():
-    """Executa o torneio e imprime métricas agregadas."""
-    max_games = 1000
-    max_attempts = 1000  # Inclui chutes de números e de regras
+def update_readme(stats_by_type, total_games):
+    """Gera a tabela Markdown completa e sobrescreve o README.md."""
 
-    attempts = []
-    number_guess_counts = []
-    wins = 0
+    # Coletar dados globais
+    all_attempts = []
+    total_wins = 0
+    for data in stats_by_type.values():
+        all_attempts.extend(data["attempts"])
+        total_wins += data["wins"]
+
+    lines = [
+        "## mc102-p1\n",
+        "### Resultado do Último Torneio\n",
+        "| Regra | Partidas | Vitórias | Win % | Média | Mediana | Desvio P. | Min | Max |",
+        "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+    ]
+
+    # Linhas por tipo
+    for r_type in ["mod", "pot", "int"]:
+        data = stats_by_type[r_type]
+        if data["count"] > 0:
+            mean, median, std, v_min, v_max = results_from_list(data["attempts"])
+            win_p = (data["wins"] / data["count"]) * 100
+            lines.append(
+                f"| {r_type.upper()} | {data['count']} | {data['wins']} | {win_p:.1f}% | {mean:.2f} | {median} | {std:.2f} | {v_min} | {v_max} |"
+            )
+
+    # Linha Global
+    g_mean, g_median, g_std, g_min, g_max = results_from_list(all_attempts)
+    g_win_p = (total_wins / total_games) * 100
+    lines.append(
+        f"| **GLOBAL** | **{total_games}** | **{total_wins}** | **{g_win_p:.1f}%** | **{g_mean:.2f}** | **{g_median}** | **{g_std:.2f}** | **{g_min}** | **{g_max}** |"
+    )
+
+    with open("README.md", "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    print("\n[OK] README.md atualizado com estatísticas detalhadas!")
+
+
+def update_changelog(stats_by_type, total_games):
+    """Adiciona os resultados atuais ao final do CHANGELOG.md com data e hora."""
+
+    # Coletar dados globais
+    all_attempts = []
+    total_wins = 0
+    for data in stats_by_type.values():
+        all_attempts.extend(data["attempts"])
+        total_wins += data["wins"]
+
+    now = datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
+    lines = [
+        f"\n## Relatório de Execução - {now}\n",
+        "| Regra | Partidas | Vitórias | Win % | Média | Mediana | Desvio P. | Min | Max |",
+        "| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+    ]
+
+    for r_type in ["mod", "pot", "int"]:
+        data = stats_by_type[r_type]
+        if data["count"] > 0:
+            mean, median, std, v_min, v_max = results_from_list(data["attempts"])
+            win_p = (data["wins"] / data["count"]) * 100
+            lines.append(
+                f"| {r_type.upper()} | {data['count']} | {data['wins']} | {win_p:.1f}% | {mean:.2f} | {median} | {std:.2f} | {v_min} | {v_max} |"
+            )
+
+    g_mean, g_median, g_std, g_min, g_max = results_from_list(all_attempts)
+    g_win_p = (total_wins / total_games) * 100
+    lines.append(
+        f"| **GLOBAL** | **{total_games}** | **{total_wins}** | **{g_win_p:.1f}%** | **{g_mean:.2f}** | **{g_median}** | **{g_std:.2f}** | **{g_min}** | **{g_max}** |\n"
+    )
+    lines.append("---\n")  # Linha horizontal para separar as entradas
+
+    with open("CHANGELOG.md", "a", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+    print("[OK] CHANGELOG.md atualizado (histórico preservado)!")
+
+
+def main():
+    max_games = 1000
+    max_attempts = 1000
+
+    stats_by_type = {
+        "mod": {"attempts": [], "wins": 0, "count": 0},
+        "pot": {"attempts": [], "wins": 0, "count": 0},
+        "int": {"attempts": [], "wins": 0, "count": 0},
+    }
 
     for _ in tqdm(range(max_games)):
         result = play_one_game(max_attempts=max_attempts)
-        attempts.append(result["attempts"])
-        number_guess_counts.append(result["number_guesses"])
+        r_type = result["type"]
+        stats_by_type[r_type]["count"] += 1
+        stats_by_type[r_type]["attempts"].append(result["attempts"])
         if result["win"]:
-            wins += 1
+            stats_by_type[r_type]["wins"] += 1
 
-    fails = max_games - wins
-    success_rate = (wins / max_games * 100) if max_games else 0
+    update_readme(stats_by_type, max_games)
 
-    attempts_stats = results_from_list(attempts)
-    number_stats = results_from_list(number_guess_counts)
+    update_readme(stats_by_type, max_games)
 
-    print("\nTorneio finalizado!\n")
-    print(f"Total de partidas simuladas: {max_games}")
-    print(f"Máximo de tentativas por jogo: {max_attempts}")
-    print(f"Partidas vencidas: {wins}")
-    print(f"Partidas sem acerto: {fails}")
-    print(f"Taxa de acerto: {success_rate:.2f}%")
-
-    print("\nTentativas por partida:")
-    print(f"Média: {attempts_stats[0]:.3f}")
-    print(f"Mediana: {attempts_stats[1]:.3f}")
-    print(f"Desvio padrão: {attempts_stats[2]:.3f}")
-    print(f"Mínimo: {attempts_stats[3]}")
-    print(f"Máximo: {attempts_stats[4]}")
-
-    print("\nChutes de número por partida:")
-    print(f"Média: {number_stats[0]:.3f}")
-    print(f"Mediana: {number_stats[1]:.3f}")
-    print(f"Desvio padrão: {number_stats[2]:.3f}")
-    print(f"Mínimo: {number_stats[3]}")
-    print(f"Máximo: {number_stats[4]}")
+    # Atualiza o CHANGELOG (Histórico)
+    update_changelog(stats_by_type, max_games)
 
 
 if __name__ == "__main__":
