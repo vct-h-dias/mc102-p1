@@ -15,8 +15,7 @@ cannot_be_k_of_4096 = False
 not_k_of_4096 = [1, 5, 7, 8, 9, 10]
 
 CAN_BE_INTERVAL = True
-left_neighbor_is_valid = -1
-right_neighbor_is_valid = -1
+CAN_BE_MOD = True
 
 left_bs_left = -1
 left_bs_right = -1
@@ -26,8 +25,6 @@ found_a = False
 found_b = False
 interval_a = -1
 interval_b = -1
-
-CAN_BE_MOD = True
 
 n_start = -1
 left = -1
@@ -87,10 +84,9 @@ def player(number_guesses, rule_guesses):
     global guess_type, number_direction_type, rule_type
     global CAN_BE_PERFECT_POW, can_be_k_of_4096, cannot_be_k_of_4096
     global k_of_4096, not_k_of_4096
-    global CAN_BE_INTERVAL, left_neighbor_is_valid, right_neighbor_is_valid
+    global CAN_BE_INTERVAL, CAN_BE_MOD
     global left_bs_left, left_bs_right, right_bs_left, right_bs_right
     global found_a, found_b, interval_a, interval_b
-    global CAN_BE_MOD
     global attempts, n_start, left, right
     global last_processed_number_guesses
 
@@ -146,74 +142,64 @@ def player(number_guesses, rule_guesses):
     if len(number_guesses) > last_processed_number_guesses and n_start != -1:
         last_guess, direction, is_valid = number_guesses[-1]
 
-        if last_guess == n_start - 1 and left_neighbor_is_valid == -1 and CAN_BE_MOD:
-            left_neighbor_is_valid = is_valid
-            if is_valid:
-                CAN_BE_MOD = False
-            else:
-                found_a = True
-                interval_a = n_start
-
-        elif last_guess == n_start + 1 and right_neighbor_is_valid == -1 and CAN_BE_MOD:
-            right_neighbor_is_valid = is_valid
-            if is_valid:
-                CAN_BE_MOD = False
-            else:
-                found_b = True
-                interval_b = n_start
-
-        elif not found_a and left_bs_left != -1:
-            if is_valid:
-                left_bs_right = last_guess
-            else:
-                left_bs_left = last_guess + 1
-
-        elif found_a and not found_b and right_bs_left != -1:
-            if is_valid:
-                right_bs_left = last_guess
-            else:
-                right_bs_right = last_guess - 1
+        if CAN_BE_INTERVAL and left_bs_left != -1:
+            if not found_a:
+                if is_valid:
+                    left_bs_right = last_guess
+                else:
+                    if direction == number_direction_type["GREATER"]:
+                        left_bs_left = last_guess + 1
+                    else:
+                        left_bs_right = last_guess - 1
+            elif not found_b:
+                if is_valid:
+                    right_bs_left = last_guess
+                else:
+                    if direction == number_direction_type["LESS"]:
+                        right_bs_right = last_guess - 1
+                    else:
+                        right_bs_left = last_guess + 1
 
         last_processed_number_guesses = len(number_guesses)
 
-    if CAN_BE_INTERVAL and CAN_BE_MOD:
-        if left_neighbor_is_valid == -1:
-            if n_start > 1:
-                return [guess_type["NUMBER"], n_start - 1]
-            else:
-                left_neighbor_is_valid = None
-                found_a = True
-                interval_a = 1
+    if CAN_BE_MOD:
+        candidates = list(range(2, 101))
+        possible_ks = filter_k_candidates(candidates, n_start, number_guesses)
 
-        if right_neighbor_is_valid == -1:
-            if n_start < 100_000:
-                return [guess_type["NUMBER"], n_start + 1]
-            else:
-                right_neighbor_is_valid = None
-                found_b = True
-                interval_b = 100_000
+        for rg in rule_guesses:
+            if rg[0] == rule_type["MOD"] and rg[1] in possible_ks:
+                possible_ks.remove(rg[1])
+
+        if len(possible_ks) == 1:
+            return [
+                guess_type["RULE"],
+                [rule_type["MOD"], possible_ks[0], n_start % possible_ks[0]],
+            ]
+        elif len(possible_ks) == 0:
+            CAN_BE_MOD = False
 
     if CAN_BE_INTERVAL:
-        base_left, base_right = get_interval_bounds_from_history(
-            number_guesses, n_start
-        )
+        if left_bs_left == -1:
+            base_left, base_right = get_interval_bounds_from_history(
+                number_guesses, n_start
+            )
+            left_bs_left = max(base_left, max(1, n_start - 100))
+            left_bs_right = n_start
 
         if not found_a:
-            if left_bs_left == -1:
-                left_bs_left = max(base_left, max(1, n_start - 100))
-                left_bs_right = n_start - 1
             if left_bs_left >= left_bs_right:
                 interval_a = left_bs_left
                 found_a = True
+
+                base_left, base_right = get_interval_bounds_from_history(
+                    number_guesses, n_start
+                )
+                right_bs_left = n_start
+                right_bs_right = min(base_right, min(100_000, interval_a + 100))
             else:
                 return [guess_type["NUMBER"], (left_bs_left + left_bs_right) // 2]
 
         if found_a and not found_b:
-            if right_bs_left == -1:
-                right_bs_left = (
-                    n_start + 1 if right_neighbor_is_valid == True else n_start
-                )
-                right_bs_right = min(base_right, min(100_000, interval_a + 100))
             if right_bs_left >= right_bs_right:
                 interval_b = right_bs_right
                 found_b = True
@@ -226,58 +212,39 @@ def player(number_guesses, rule_guesses):
             else:
                 return [guess_type["RULE"], [rule_type["INT"], interval_a, interval_b]]
 
-    if CAN_BE_MOD:
-        candidates = list(range(2, 101))
-        possible_ks = filter_k_candidates(candidates, n_start, number_guesses)
+    if CAN_BE_MOD and len(possible_ks) > 1:
+        best_guess = -1
+        best_diff = float("inf")
+        target_split = len(possible_ks) / 2.0
+        guesses_set = set(g[0] for g in number_guesses)
 
-        for rg in rule_guesses:
-            if rg[0] == rule_type["MOD"] and rg[1] in possible_ks:
-                possible_ks.remove(rg[1])
+        for offset in range(1, 100_000):
+            for sign in [1, -1]:
+                x = n_start + sign * offset
+                if 1 <= x <= 100_000 and x not in guesses_set:
+                    valid_count = sum(1 for k in possible_ks if x % k == (n_start % k))
+                    if 0 < valid_count < len(possible_ks):
+                        diff = abs(valid_count - target_split)
+                        if diff < best_diff:
+                            best_diff = diff
+                            best_guess = x
 
-        if len(possible_ks) == 1:
-            k = possible_ks[0]
-            return [guess_type["RULE"], [rule_type["MOD"], k, n_start % k]]
+                        if best_diff == 0 or best_diff == 0.5:
+                            break
+            if best_diff == 0 or best_diff == 0.5:
+                break
 
-        elif len(possible_ks) > 1:
-            best_guess = -1
-            best_diff = float("inf")
-            target_split = len(possible_ks) / 2.0
-            guesses_set = set(g[0] for g in number_guesses)
-
+        if best_guess == -1:
             for offset in range(1, 100_000):
                 for sign in [1, -1]:
                     x = n_start + sign * offset
                     if 1 <= x <= 100_000 and x not in guesses_set:
-                        valid_count = sum(
-                            1 for k in possible_ks if x % k == (n_start % k)
-                        )
-                        if 0 < valid_count < len(possible_ks):
-                            diff = abs(valid_count - target_split)
-                            if diff < best_diff:
-                                best_diff = diff
-                                best_guess = x
-
-                            if best_diff == 0 or best_diff == 0.5:
-                                break
-                if best_diff == 0 or best_diff == 0.5:
+                        best_guess = x
+                        break
+                if best_guess != -1:
                     break
 
-            if best_guess == -1:
-                for offset in range(1, 100_000):
-                    for sign in [1, -1]:
-                        x = n_start + sign * offset
-                        if 1 <= x <= 100_000 and x not in guesses_set:
-                            best_guess = x
-                            break
-                    if best_guess != -1:
-                        break
-
-            return [guess_type["NUMBER"], best_guess]
-
-        else:
-            CAN_BE_MOD = False
-            if found_a and found_b:
-                return [guess_type["RULE"], [rule_type["INT"], interval_a, interval_b]]
+        return [guess_type["NUMBER"], best_guess]
 
     guesses_set = set(g[0] for g in number_guesses)
     for fallback_num in range(1, 100_001):
