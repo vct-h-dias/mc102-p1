@@ -240,6 +240,8 @@ def player(number_guesses, rule_guesses):
 
         elif len(possible_ks) > 1:
             best_guess = -1
+            best_diff = float("inf")
+            target_split = len(possible_ks) / 2.0
             guesses_set = set(g[0] for g in number_guesses)
 
             for offset in range(1, 100_000):
@@ -250,9 +252,14 @@ def player(number_guesses, rule_guesses):
                             1 for k in possible_ks if x % k == (n_start % k)
                         )
                         if 0 < valid_count < len(possible_ks):
-                            best_guess = x
-                            break
-                if best_guess != -1:
+                            diff = abs(valid_count - target_split)
+                            if diff < best_diff:
+                                best_diff = diff
+                                best_guess = x
+
+                            if best_diff == 0 or best_diff == 0.5:
+                                break
+                if best_diff == 0 or best_diff == 0.5:
                     break
 
             if best_guess == -1:
