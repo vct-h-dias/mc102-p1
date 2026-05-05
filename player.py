@@ -28,6 +28,11 @@ n_start = -1
 left = -1
 right = -1
 
+# Variáveis do Galloping Search Inicial
+GALLOP_FACTOR = 9
+gallop_exp = 0
+start_phase = "gallop"
+
 global attempts
 attempts = -1
 last_processed_number_guesses = -1
@@ -110,29 +115,50 @@ def player(number_guesses, rule_guesses):
     global found_a, found_b, interval_a, interval_b
     global attempts, n_start, left, right
     global last_processed_number_guesses
+    global gallop_exp, start_phase
 
     attempts += 1
 
+    # ==========================================
+    # BUSCA INICIAL DO N_START (Galloping -> Binária)
+    # ==========================================
     if n_start == -1:
         if len(number_guesses) and number_guesses[-1][2]:
             n_start = number_guesses[-1][0]
         else:
             if left == -1:
                 left = 1
-                return [guess_type["NUMBER"], 1]
-
-            if right == -1:
                 right = 100_000
-                return [guess_type["NUMBER"], 100_000]
+                return [guess_type["NUMBER"], 1]
 
             last_guess, direction, _ = number_guesses[-1]
 
-            if direction == number_direction_type["LESS"]:
-                right = last_guess - 1
-            elif direction == number_direction_type["GREATER"]:
-                left = last_guess + 1
+            if start_phase == "gallop":
+                if direction == number_direction_type["GREATER"]:
+                    left = last_guess + 1
+                    gallop_exp += 7
+                    next_guess = 2**gallop_exp
 
-            return [guess_type["NUMBER"], (left + right) // 2]
+                    if next_guess >= 100_000:
+                        start_phase = "bs"
+                        right = 100_000
+                        return [guess_type["NUMBER"], (left + right) // 2]
+                    return [guess_type["NUMBER"], next_guess]
+                else:
+                    # Overshoot! Passamos do número. Entra em Busca Binária na janela encontrada.
+                    right = last_guess - 1
+                    start_phase = "bs"
+                    return [guess_type["NUMBER"], (left + right) // 2]
+            else:
+                # Fase de Busca Binária Padrão
+                if direction == number_direction_type["LESS"]:
+                    right = last_guess - 1
+                elif direction == number_direction_type["GREATER"]:
+                    left = last_guess + 1
+
+                return [guess_type["NUMBER"], (left + right) // 2]
+
+    # ==========================================
 
     if n_start != 1:
         CAN_BE_PERFECT_POW = False
