@@ -2,8 +2,6 @@
 # RA #01 (quem entregou o código):      [RA #01]
 # Nome #02:                             [NOME COMPLETO #02]
 # RA #02:                               [RA #02]
-from utils.get_interval_bounds import get_interval_bounds_from_history
-
 guess_type = {"NUMBER": "NUMBER", "RULE": "RULE"}
 rule_type = {"MOD": "mod", "POW": "pot", "INT": "int"}
 number_direction_type = {"GREATER": "maior", "LESS": "menor"}
@@ -33,6 +31,29 @@ right = -1
 global attempts
 attempts = -1
 last_processed_number_guesses = -1
+
+
+def get_interval_bounds_from_history(number_guesses, n_start):
+    left_bound = 1
+    right_bound = 100_000
+
+    closest_left_invalid = -1
+    closest_right_invalid = 100_001
+
+    for guess, direction, is_valid in number_guesses:
+        if not is_valid:
+            if guess < n_start:
+                closest_left_invalid = max(closest_left_invalid, guess)
+            elif guess > n_start:
+                closest_right_invalid = min(closest_right_invalid, guess)
+
+    if closest_left_invalid != -1:
+        left_bound = closest_left_invalid + 1
+
+    if closest_right_invalid != 100_001:
+        right_bound = closest_right_invalid - 1
+
+    return left_bound, right_bound
 
 
 def filter_k_candidates(candidates, n_start, number_guesses):
