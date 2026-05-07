@@ -7,10 +7,8 @@ rule_type = {"MOD": "mod", "POW": "pot", "INT": "int"}
 number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
 CAN_BE_PERFECT_POW = True
-can_be_k_of_4096 = False
-k_of_4096 = [1, 2, 3, 4, 6]
-cannot_be_k_of_4096 = False
-not_k_of_4096 = [1, 5, 7, 8, 9, 10]
+pow_tree = {'type': 'number', 'n': 512, 'branches': {'T': {'type': 'number', 'n': 5, 'branches': {'T': {'type': 'rule', 'p': 1}, 'S': {'type': 'rule', 'p': 9}, 'L': {'type': 'rule', 'p': 3}}}, 'S': {'type': 'number', 'n': 243, 'branches': {'T': {'type': 'rule', 'p': 5}, 'S': {'type': 'number', 'n': 65, 'branches': {'S': {'type': 'rule', 'p': 10}, 'L': {'type': 'rule', 'p': 7}}}, 'L': {'type': 'rule', 'p': 8}}}, 'L': {'type': 'number', 'n': 9, 'branches': {'T': {'type': 'rule', 'p': 2}, 'S': {'type': 'rule', 'p': 6}, 'L': {'type': 'rule', 'p': 4}}}}}
+pow_phase_start_idx = -1
 
 CAN_BE_INTERVAL = True
 CAN_BE_MOD = True
@@ -108,8 +106,7 @@ def filter_k_candidates(candidates, n_start, number_guesses):
 
 def player(number_guesses, rule_guesses):
     global guess_type, number_direction_type, rule_type
-    global CAN_BE_PERFECT_POW, can_be_k_of_4096, cannot_be_k_of_4096
-    global k_of_4096, not_k_of_4096
+    global CAN_BE_PERFECT_POW, pow_tree, pow_phase_start_idx
     global CAN_BE_INTERVAL, CAN_BE_MOD
     global left_bs_left, left_bs_right, right_bs_left, right_bs_right
     global found_a, found_b, interval_a, interval_b
@@ -164,24 +161,23 @@ def player(number_guesses, rule_guesses):
         CAN_BE_PERFECT_POW = False
 
     if CAN_BE_PERFECT_POW:
-        if number_guesses[-1][0] == 4096 and number_guesses[-1][2]:
-            can_be_k_of_4096 = True
-        elif number_guesses[-1][0] == 4096 and not number_guesses[-1][2]:
-            cannot_be_k_of_4096 = True
+        if pow_phase_start_idx == -1:
+            pow_phase_start_idx = len(number_guesses)
+
+        curr = pow_tree
+        for guess, direction, is_valid in number_guesses[pow_phase_start_idx:]:
+            if is_valid:
+                curr = curr['branches']['T']
+            elif direction == number_direction_type["GREATER"]:
+                curr = curr['branches']['L']
+            else:
+                curr = curr['branches']['S']
+
+        if curr['type'] == 'number':
+            return [guess_type["NUMBER"], curr['n']]
         else:
-            return [guess_type["NUMBER"], 4096]
-
-        if can_be_k_of_4096:
-            current_pow = k_of_4096.pop()
-            if len(k_of_4096) == 0:
-                CAN_BE_PERFECT_POW = False
-            return [guess_type["RULE"], [rule_type["POW"], current_pow, -1]]
-
-        elif cannot_be_k_of_4096:
-            current_pow = not_k_of_4096.pop()
-            if len(not_k_of_4096) == 0:
-                CAN_BE_PERFECT_POW = False
-            return [guess_type["RULE"], [rule_type["POW"], current_pow, -1]]
+            CAN_BE_PERFECT_POW = False
+            return [guess_type["RULE"], [rule_type["POW"], curr['p'], -1]]
 
     if len(rule_guesses) > 0 and rule_guesses[-1][0] == rule_type["INT"]:
         CAN_BE_INTERVAL = False
