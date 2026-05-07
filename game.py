@@ -130,7 +130,9 @@ def rule_is_possible(guess):
 def guess_rule(guess, rule_info):
     """Verifica se o chute de regra do jogador está correto e retorna booleano indicando acerto ou erro."""
     if guess["type"] != rule_info["type"]:
+        #print(f"Was: {rule_info['type']}, got: {guess['type']}")
         return False
+    
     elif rule_info["type"] == "mod":
         return guess["k"] == rule_info["k"] and guess["r"] == rule_info["r"]
     elif rule_info["type"] == "pot":

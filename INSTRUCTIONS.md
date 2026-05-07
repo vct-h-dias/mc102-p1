@@ -20,21 +20,21 @@ Em qualquer momento, caso tenha alguma dúvida, fale com o professor ou um monit
 Considere todos os números inteiros `n` de 1 a 100.000, inclusive.
 Uma de três regras numéricas é escolhida aleatoriamente, com probabilidade igual para todas. Em seguida, seus parâmetros também são escolhidos aleatoriamente, de acordo com suas restrições. Uma regra numérica retorna `True` se `n` a satisfaz e `False` caso contrário. As regras são:
 
-| Regra | Restrição 1 | Restrição 2 |
-|-------|-------------|-------------|
-| `n` mod `k` dá resto `r`, ou `n` dividido por `k` dá resto `r`  | `k` em [2, 100] | `r` em [0, `k` - 1] |
-| `n` é uma potência perfeita de ordem `p`, ou raiz `p`-ésima de `n` é inteira | `p` em [1, 10] | - |
-| `n` pertence ao intervalo fechado [`a`, `b`] | 1 <= `a` <= `b` <= 100.000 | `b` - `a` <= 100 |
+| Regra                                                                        | Restrição 1                | Restrição 2         |
+| ------------------------------------------------------------------------------| ----------------------------| ---------------------|
+| `n` mod `k` dá resto `r`, ou `n` dividido por `k` dá resto `r`               | `k` em [2, 100]            | `r` em [0, `k` - 1] |
+| `n` é uma potência perfeita de ordem `p`, ou raiz `p`-ésima de `n` é inteira | `p` em [1, 10]             | -                   |
+| `n` pertence ao intervalo fechado [`a`, `b`]                                 | 1 <= `a` <= `b` <= 100.000 | `b` - `a` <= 100    |
 
 Todos os parâmetros `k`, `r`, `p`, `a` e `b` são números inteiros.
 
 Seja `N` o conjunto de todos os números `n` que satisfaçam a regra escolhida. Alguns exemplos:
 
-| Regra | Conjunto N |
-|-------|------------|
-| `n` mod 5 dá resto 2 | {2, 7, 12, 17, ..., 999.992, 999.997} |
-| `n` é uma potência perfeita de ordem 3 | {1, 8, 27, 64, ..., 91125, 97336} = {1³, 2³, 3³, 4³, ... 45³, 46³} |
-| `n` pertence ao intervalo [68331, 68377] | {68331, 68332, 68333, 68334, ..., 68376, 68377} |
+| Regra                                    | Conjunto N                                                         |
+| ------------------------------------------| --------------------------------------------------------------------|
+| `n` mod 5 dá resto 2                     | {2, 7, 12, 17, ..., 999.992, 999.997}                              |
+| `n` é uma potência perfeita de ordem 3   | {1, 8, 27, 64, ..., 91125, 97336} = {1³, 2³, 3³, 4³, ... 45³, 46³} |
+| `n` pertence ao intervalo [68331, 68377] | {68331, 68332, 68333, 68334, ..., 68376, 68377}                    |
 
 
 **O objetivo do jogo é descobrir qual regra gera um conjunto de números verdadeiros `N`.** Para isso, você pode chutar números ou regras.
@@ -55,38 +55,38 @@ Seja `N` o conjunto de todos os números `n` que satisfaçam a regra escolhida. 
 | "`n` mod 2 dá resto 1" | CORRETO, partida encerrada |
 
 ### Partida 2
-| Chute | Resultado |
-|-------|-----------|
-| 100 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
-| 150 | OK |
-| 140 | OK |
-| 130 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
-| "`n` pertence ao intervalo [140, 150]" | INCORRETO |
-| 131 | OK |
-| "`n` pertence ao intervalo [131, 150]" | INCORRETO |
-| 151 | OK |
-| 152 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
-| "`n` pertence ao intervalo [131, 151]" | CORRETO, partida encerrada | 
+| Chute                                  | Resultado                                                         |
+| ----------------------------------------| -------------------------------------------------------------------|
+| 100                                    | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
+| 150                                    | OK                                                                |
+| 140                                    | OK                                                                |
+| 130                                    | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
+| "`n` pertence ao intervalo [140, 150]" | INCORRETO                                                         |
+| 131                                    | OK                                                                |
+| "`n` pertence ao intervalo [131, 150]" | INCORRETO                                                         |
+| 151                                    | OK                                                                |
+| 152                                    | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
+| "`n` pertence ao intervalo [131, 151]" | CORRETO, partida encerrada                                        |
 
 ### Partida 3
-| Chute | Resultado |
-|-------|-----------|
-| 500 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
-| 250 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
-| 256 | OK |
-| "`n` é potência perfeita de 2" | INCORRETO |
-| "`n` é potência perfeita de 4" | INCORRETO |
-| "`n` é potência perfeita de 8" | CORRETO, partida encerrada | 
+| Chute                          | Resultado                                                         |
+| --------------------------------| -------------------------------------------------------------------|
+| 500                            | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
+| 250                            | NÃO ESTÁ, mas um número mais próximo que pertence à regra é maior |
+| 256                            | OK                                                                |
+| "`n` é potência perfeita de 2" | INCORRETO                                                         |
+| "`n` é potência perfeita de 4" | INCORRETO                                                         |
+| "`n` é potência perfeita de 8" | CORRETO, partida encerrada                                        |
 
 
 # 3. COMO RODAR O JOGO
 ## Glossário de comandos no terminal
-| Comando | Significado |
-|---------|-------------|
-| `python game.py` | Modo manual |
-| `python game.py --auto` | Modo automático com 800 ms entre chutes|
+| Comando                     | Significado                             |
+| -----------------------------| -----------------------------------------|
+| `python game.py`            | Modo manual                             |
+| `python game.py --auto`     | Modo automático com 800 ms entre chutes |
 | `python game.py --auto [t]` | Modo automático com `t` ms entre chutes |
-| `python tournament.py` | Modo torneio |
+| `python tournament.py`      | Modo torneio                            |
 
 Em alguns sistemas operacionais, você pode/deve usar `python3` ao invés de `python`.
 
@@ -167,13 +167,13 @@ Sua principal tarefa será modificar o arquivo `player.py`. Especificamente, voc
         - Se `TIPO` for `"int"`, `P1` é o valor de `a` e `P2` é o valor de `b`.
 
 Exemplos de retornos válidos da função `player`:
-| Retorno | Chute |
-|--------------|------------|
-|`["NUMBER", 42]` | Chutando o número 42 |
-|`["NUMBER", 100000]` | Chutando o número 100.000 |
-|`["RULE", ["mod", 3, 1]]` | Chutando a regra "`n` mod 3 dá resto 1" |
-|`["RULE", ["pot", 2, 999]]` | Chutando a regra "`n` é potência perfeita de ordem 2"
-|`["RULE", ["int", 10, 20]]` | Chutando a regra "`n` pertence ao intervalo [10, 20]"
+| Retorno                     | Chute                                                 |
+| -----------------------------| -------------------------------------------------------|
+| `["NUMBER", 42]`            | Chutando o número 42                                  |
+| `["NUMBER", 100000]`        | Chutando o número 100.000                             |
+| `["RULE", ["mod", 3, 1]]`   | Chutando a regra "`n` mod 3 dá resto 1"               |
+| `["RULE", ["pot", 2, 999]]` | Chutando a regra "`n` é potência perfeita de ordem 2" |
+| `["RULE", ["int", 10, 20]]` | Chutando a regra "`n` pertence ao intervalo [10, 20]" |
 
 Caso sua função não tenha um retorno adequado, a automatização não irá ocorrer tanto em game.py quanto em tournament.py.
 
