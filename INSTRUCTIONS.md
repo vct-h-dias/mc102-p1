@@ -20,11 +20,11 @@ Em qualquer momento, caso tenha alguma dúvida, fale com o professor ou um monit
 Considere todos os números inteiros `n` de 1 a 100.000, inclusive.
 Uma de três regras numéricas é escolhida aleatoriamente, com probabilidade igual para todas. Em seguida, seus parâmetros também são escolhidos aleatoriamente, de acordo com suas restrições. Uma regra numérica retorna `True` se `n` a satisfaz e `False` caso contrário. As regras são:
 
-| Regra | Restrição 1 | Restrição 2 |
-|-------|-------------|-------------|
-| `n` mod `k` dá resto `r`, ou `n` dividido por `k` dá resto `r`  | `k` em [2, 100] | `r` em [0, `k` - 1] |
-| `n` é uma potência perfeita de ordem `p`, ou raiz `p`-ésima de `n` é inteira | `p` em [1, 10] | - |
-| `n` pertence ao intervalo fechado [`a`, `b`] | 1 <= `a` <= `b` <= 100.000 | `b` - `a` <= 100 |
+| Regra                                                                        | Restrição 1                | Restrição 2         |
+| ------------------------------------------------------------------------------| ----------------------------| ---------------------|
+| `n` mod `k` dá resto `r`, ou `n` dividido por `k` dá resto `r`               | `k` em [2, 100]            | `r` em [0, `k` - 1] |
+| `n` é uma potência perfeita de ordem `p`, ou raiz `p`-ésima de `n` é inteira | `p` em [1, 10]             | -                   |
+| `n` pertence ao intervalo fechado [`a`, `b`]                                 | 1 <= `a` <= `b` <= 100.000 | `b` - `a` <= 100    |
 
 Todos os parâmetros `k`, `r`, `p`, `a` e `b` são números inteiros.
 
@@ -45,14 +45,14 @@ Seja `N` o conjunto de todos os números `n` que satisfaçam a regra escolhida. 
 ## Exemplos de partidas
 
 ### Partida 1
-| Chute | Resultado |
-|-------|-----------|
-| 50 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
-| 49 | OK |
-| 48 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
-| 47 | OK |
-| 46 | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
-| "`n` mod 2 dá resto 1" | CORRETO, partida encerrada |
+| Chute                  | Resultado                                                         |
+| ------------------------| -------------------------------------------------------------------|
+| 50                     | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
+| 49                     | OK                                                                |
+| 48                     | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
+| 47                     | OK                                                                |
+| 46                     | NÃO ESTÁ, mas um número mais próximo que pertence à regra é menor |
+| "`n` mod 2 dá resto 1" | CORRETO, partida encerrada                                        |
 
 ### Partida 2
 | Chute | Resultado |

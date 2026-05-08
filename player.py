@@ -1,12 +1,14 @@
-# Nome #01 (quem entregou o código):    [NOME COMPLETO #01]
-# RA #01 (quem entregou o código):      [RA #01]
-# Nome #02:                             [NOME COMPLETO #02]
-# RA #02:                               [RA #02]
+# Nome #01 (quem entregou o código):    Miguel Cyrineu Vale
+# RA #01 (quem entregou o código):      306523
+# Nome #02:                             Victor Hugo Montanari Dias
+# RA #02:                               306564
 guess_type = {"NUMBER": "NUMBER", "RULE": "RULE"}
 rule_type = {"MOD": "mod", "POW": "pot", "INT": "int"}
 number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
 CAN_BE_PERFECT_POW = True
+# A árvore pow_tree foi construída com um modelo estatístico baseado em teoria da informação. 
+# Mais detalhes da sua construção em https://github.com/vct-h-dias/mc102-p1
 pow_tree = {'type': 'number', 'n': 512, 'branches': {'T': {'type': 'number', 'n': 5, 'branches': {'T': {'type': 'rule', 'p': 1}, 'S': {'type': 'rule', 'p': 9}, 'L': {'type': 'rule', 'p': 3}}}, 'S': {'type': 'number', 'n': 243, 'branches': {'T': {'type': 'rule', 'p': 5}, 'S': {'type': 'number', 'n': 65, 'branches': {'S': {'type': 'rule', 'p': 10}, 'L': {'type': 'rule', 'p': 7}}}, 'L': {'type': 'rule', 'p': 8}}}, 'L': {'type': 'number', 'n': 9, 'branches': {'T': {'type': 'rule', 'p': 2}, 'S': {'type': 'rule', 'p': 6}, 'L': {'type': 'rule', 'p': 4}}}}}
 pow_phase_start_idx = -1
 
@@ -26,7 +28,6 @@ n_start = -1
 left = -1
 right = -1
 
-# Variáveis do Galloping Search Inicial
 GALLOP_FACTOR = 9
 gallop_exp = 0
 start_phase = "gallop"
@@ -37,6 +38,17 @@ last_processed_number_guesses = -1
 
 
 def get_interval_bounds_from_history(number_guesses, n_start):
+    """
+        Essa função usa o histórico do jogo (number_guesses e n_start) para calcular
+        a left_bound e right_bound para a busca binária dos parâmetros da regra int.
+
+        Args:
+            n_start (int): o primeiro n que retorna `igual` nas guesses
+            number_guesses (list(int)): o histórico de guesses do jogo 
+        Returns:
+            left_bound (int)
+            right_bound (int)
+    """
     left_bound = 1
     right_bound = 100_000
 
@@ -60,6 +72,19 @@ def get_interval_bounds_from_history(number_guesses, n_start):
 
 
 def filter_k_candidates(candidates, n_start, number_guesses):
+    """ 
+        Essa função flitira os candidatos de k para a regra mod, ou seja,
+        para todos os candidatos de k possíveis, ela vê se não há nenhuma
+        contradição deles com os resultados das guesses de n.
+
+        Args:
+            candidates (list(int)): uma lista de todos os possíveis candidatos de k;
+            n_start (int): o primeiro n que retorna `igual` nas guesses
+            number_guesses (int): o histórico de guesses do jogo 
+        
+        Returns:
+            filtered list(int): uma lista com todos os valores de k de candidates ainda possíveis para a regra `mod`
+    """
     filtered = []
 
     for k in candidates:
@@ -105,6 +130,17 @@ def filter_k_candidates(candidates, n_start, number_guesses):
 
 
 def player(number_guesses, rule_guesses):
+    """
+        Função principal da solução. Ela gerencia o estado atual do jogo através de variáveis globais, e faz de fato os chutes de número e regra.
+        Mais detalhes de implementação, inclusive da solução "caixa preta" da regra `pot` em: https://github.com/vct-h-dias/mc102-p1
+
+        Args:
+            number_guesses (list): histórico dos chutes de número feitos, juntamente com o resultado (igual)
+            rule_guesses (list): histório dos chutes de regra feitos
+        Returns:
+            guess: ou uma guess de número (ex.: `['NUMBER', n]`) ou uma guess de regra (ex.: `['RULE', ['rule', param1, param2]]`)
+
+    """
     global guess_type, number_direction_type, rule_type
     global CAN_BE_PERFECT_POW, pow_tree, pow_phase_start_idx
     global CAN_BE_INTERVAL, CAN_BE_MOD
@@ -116,9 +152,6 @@ def player(number_guesses, rule_guesses):
 
     attempts += 1
 
-    # ==========================================
-    # BUSCA INICIAL DO N_START (Galloping -> Binária)
-    # ==========================================
     if n_start == -1:
         if len(number_guesses) and number_guesses[-1][2]:
             n_start = number_guesses[-1][0]
@@ -142,20 +175,17 @@ def player(number_guesses, rule_guesses):
                         return [guess_type["NUMBER"], (left + right) // 2]
                     return [guess_type["NUMBER"], next_guess]
                 else:
-                    # Overshoot! Passamos do número. Entra em Busca Binária na janela encontrada.
+                    # overshoot, entramos em bs
                     right = last_guess - 1
                     start_phase = "bs"
                     return [guess_type["NUMBER"], (left + right) // 2]
             else:
-                # Fase de Busca Binária Padrão
                 if direction == number_direction_type["LESS"]:
                     right = last_guess - 1
                 elif direction == number_direction_type["GREATER"]:
                     left = last_guess + 1
 
                 return [guess_type["NUMBER"], (left + right) // 2]
-
-    # ==========================================
 
     if n_start != 1:
         CAN_BE_PERFECT_POW = False
@@ -294,4 +324,5 @@ def player(number_guesses, rule_guesses):
         if fallback_num not in guesses_set:
             return [guess_type["NUMBER"], fallback_num]
 
+    # nao é pra isso executar
     return ["TODO", 0]
