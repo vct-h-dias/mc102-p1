@@ -2,15 +2,12 @@
 # RA #01 (quem entregou o código):      306523
 # Nome #02:                             Victor Hugo Montanari Dias
 # RA #02:                               306564
-guess_type = {"NUMBER": "NUMBER", "RULE": "RULE"}
-rule_type = {"MOD": "mod", "POW": "pot", "INT": "int"}
-number_direction_type = {"GREATER": "maior", "LESS": "menor"}
 
-CAN_BE_PERFECT_POW = True
-# A árvore pow_tree foi construída com um modelo estatístico baseado em teoria da informação. 
+CAN_BE_PERFECT_POT = True
+# A árvore pot_tree foi construída com um modelo estatístico baseado em teoria da informação. 
 # Mais detalhes da sua construção em https://github.com/vct-h-dias/mc102-p1
-pow_tree = {'type': 'number', 'n': 512, 'branches': {'T': {'type': 'number', 'n': 5, 'branches': {'T': {'type': 'rule', 'p': 1}, 'S': {'type': 'rule', 'p': 9}, 'L': {'type': 'rule', 'p': 3}}}, 'S': {'type': 'number', 'n': 243, 'branches': {'T': {'type': 'rule', 'p': 5}, 'S': {'type': 'number', 'n': 65, 'branches': {'S': {'type': 'rule', 'p': 10}, 'L': {'type': 'rule', 'p': 7}}}, 'L': {'type': 'rule', 'p': 8}}}, 'L': {'type': 'number', 'n': 9, 'branches': {'T': {'type': 'rule', 'p': 2}, 'S': {'type': 'rule', 'p': 6}, 'L': {'type': 'rule', 'p': 4}}}}}
-pow_phase_start_idx = -1
+pot_tree = {'type': 'number', 'n': 512, 'branches': {'T': {'type': 'number', 'n': 5, 'branches': {'T': {'type': 'rule', 'p': 1}, 'S': {'type': 'rule', 'p': 9}, 'L': {'type': 'rule', 'p': 3}}}, 'S': {'type': 'number', 'n': 243, 'branches': {'T': {'type': 'rule', 'p': 5}, 'S': {'type': 'number', 'n': 65, 'branches': {'S': {'type': 'rule', 'p': 10}, 'L': {'type': 'rule', 'p': 7}}}, 'L': {'type': 'rule', 'p': 8}}}, 'L': {'type': 'number', 'n': 9, 'branches': {'T': {'type': 'rule', 'p': 2}, 'S': {'type': 'rule', 'p': 6}, 'L': {'type': 'rule', 'p': 4}}}}}
+pot_phase_start_idx = -1
 
 CAN_BE_INTERVAL = True
 CAN_BE_MOD = True
@@ -112,9 +109,9 @@ def filter_k_candidates(candidates, n_start, number_guesses):
                 closest = min(valid_neighbors, key=lambda x: abs(x - guess))
 
                 if closest < guess:
-                    expected_dir = number_direction_type["LESS"]
+                    expected_dir = "menor"
                 elif closest > guess:
-                    expected_dir = number_direction_type["GREATER"]
+                    expected_dir = "maior"
                 else:
                     is_possible = False
                     break
@@ -142,7 +139,7 @@ def player(number_guesses, rule_guesses):
 
     """
     global guess_type, number_direction_type, rule_type
-    global CAN_BE_PERFECT_POW, pow_tree, pow_phase_start_idx
+    global CAN_BE_PERFECT_POT, pot_tree, pot_phase_start_idx
     global CAN_BE_INTERVAL, CAN_BE_MOD
     global left_bs_left, left_bs_right, right_bs_left, right_bs_right
     global found_a, found_b, interval_a, interval_b
@@ -159,12 +156,12 @@ def player(number_guesses, rule_guesses):
             if left == -1:
                 left = 1
                 right = 100_000
-                return [guess_type["NUMBER"], 1]
+                return ["NUMBER", 1]
 
             last_guess, direction, _ = number_guesses[-1]
 
             if start_phase == "gallop":
-                if direction == number_direction_type["GREATER"]:
+                if direction == "maior":
                     left = last_guess + 1
                     gallop_exp += 7
                     next_guess = 2**gallop_exp
@@ -172,44 +169,44 @@ def player(number_guesses, rule_guesses):
                     if next_guess >= 100_000:
                         start_phase = "bs"
                         right = 100_000
-                        return [guess_type["NUMBER"], (left + right) // 2]
-                    return [guess_type["NUMBER"], next_guess]
+                        return ["NUMBER", (left + right) // 2]
+                    return ["NUMBER", next_guess]
                 else:
                     # overshoot, entramos em bs
                     right = last_guess - 1
                     start_phase = "bs"
-                    return [guess_type["NUMBER"], (left + right) // 2]
+                    return ["NUMBER", (left + right) // 2]
             else:
-                if direction == number_direction_type["LESS"]:
+                if direction == "menor":
                     right = last_guess - 1
-                elif direction == number_direction_type["GREATER"]:
+                elif direction == "maior":
                     left = last_guess + 1
 
-                return [guess_type["NUMBER"], (left + right) // 2]
+                return ["NUMBER", (left + right) // 2]
 
     if n_start != 1:
-        CAN_BE_PERFECT_POW = False
+        CAN_BE_PERFECT_POT = False
 
-    if CAN_BE_PERFECT_POW:
-        if pow_phase_start_idx == -1:
-            pow_phase_start_idx = len(number_guesses)
+    if CAN_BE_PERFECT_POT:
+        if pot_phase_start_idx == -1:
+            pot_phase_start_idx = len(number_guesses)
 
-        curr = pow_tree
-        for guess, direction, is_valid in number_guesses[pow_phase_start_idx:]:
+        curr = pot_tree
+        for guess, direction, is_valid in number_guesses[pot_phase_start_idx:]:
             if is_valid:
                 curr = curr['branches']['T']
-            elif direction == number_direction_type["GREATER"]:
+            elif direction == "maior":
                 curr = curr['branches']['L']
             else:
                 curr = curr['branches']['S']
 
         if curr['type'] == 'number':
-            return [guess_type["NUMBER"], curr['n']]
+            return ["NUMBER", curr['n']]
         else:
-            CAN_BE_PERFECT_POW = False
-            return [guess_type["RULE"], [rule_type["POW"], curr['p'], -1]]
+            CAN_BE_PERFECT_POT = False
+            return ["RULE", ["pot", curr['p'], -1]]
 
-    if len(rule_guesses) > 0 and rule_guesses[-1][0] == rule_type["INT"]:
+    if len(rule_guesses) > 0 and rule_guesses[-1][0] == "int":
         CAN_BE_INTERVAL = False
 
     if len(number_guesses) > last_processed_number_guesses and n_start != -1:
@@ -220,7 +217,7 @@ def player(number_guesses, rule_guesses):
                 if is_valid:
                     left_bs_right = last_guess
                 else:
-                    if direction == number_direction_type["GREATER"]:
+                    if direction == "maior":
                         left_bs_left = last_guess + 1
                     else:
                         left_bs_right = last_guess - 1
@@ -228,7 +225,7 @@ def player(number_guesses, rule_guesses):
                 if is_valid:
                     right_bs_left = last_guess
                 else:
-                    if direction == number_direction_type["LESS"]:
+                    if direction == "menor":
                         right_bs_right = last_guess - 1
                     else:
                         right_bs_left = last_guess + 1
@@ -240,13 +237,13 @@ def player(number_guesses, rule_guesses):
         possible_ks = filter_k_candidates(candidates, n_start, number_guesses)
 
         for rg in rule_guesses:
-            if rg[0] == rule_type["MOD"] and rg[1] in possible_ks:
+            if rg[0] == "mod" and rg[1] in possible_ks:
                 possible_ks.remove(rg[1])
 
         if len(possible_ks) == 1:
             return [
-                guess_type["RULE"],
-                [rule_type["MOD"], possible_ks[0], n_start % possible_ks[0]],
+                "RULE",
+                ["mod", possible_ks[0], n_start % possible_ks[0]],
             ]
         elif len(possible_ks) == 0:
             CAN_BE_MOD = False
@@ -270,20 +267,20 @@ def player(number_guesses, rule_guesses):
                 right_bs_left = n_start
                 right_bs_right = min(base_right, min(100_000, interval_a + 100))
             else:
-                return [guess_type["NUMBER"], (left_bs_left + left_bs_right) // 2]
+                return ["NUMBER", (left_bs_left + left_bs_right) // 2]
 
         if found_a and not found_b:
             if right_bs_left >= right_bs_right:
                 interval_b = right_bs_right
                 found_b = True
             else:
-                return [guess_type["NUMBER"], (right_bs_left + right_bs_right + 1) // 2]
+                return ["NUMBER", (right_bs_left + right_bs_right + 1) // 2]
 
         if found_a and found_b:
             if interval_a == interval_b and CAN_BE_MOD:
                 pass
             else:
-                return [guess_type["RULE"], [rule_type["INT"], interval_a, interval_b]]
+                return ["RULE", ["int", interval_a, interval_b]]
 
     if CAN_BE_MOD and len(possible_ks) > 1:
         best_guess = -1
@@ -317,12 +314,12 @@ def player(number_guesses, rule_guesses):
                 if best_guess != -1:
                     break
 
-        return [guess_type["NUMBER"], best_guess]
+        return ["NUMBER", best_guess]
 
     guesses_set = set(g[0] for g in number_guesses)
     for fallback_num in range(1, 100_001):
         if fallback_num not in guesses_set:
-            return [guess_type["NUMBER"], fallback_num]
+            return ["NUMBER", fallback_num]
 
     # nao é pra isso executar
     return ["TODO", 0]
